@@ -10,10 +10,14 @@ using namespace std;
 
 class HW04_collinnc_2App : public AppBasic {
   public:
+	  //In this solution, this method constructs the inital array, 
+	  // initializes the collinncStarbucks object and uses the build and getNearest methods.
 	void setup();
 	void mouseDown( MouseEvent event );	
 	void update();
 	void draw();
+
+	// Constructs the inital array of all the data after reading it in
 	Entry* makeArray();
 	int num_items;
 };
@@ -28,6 +32,8 @@ void HW04_collinnc_2App::setup()
 	CollinncStarbucks* test = new CollinncStarbucks;
 	test->num_items = num_items;
 	test->build(entries, num_items);
+
+	//Use the following line to manipulate the getNearest parameters
 	Entry* squirtle = test->getNearest(.05,.05);
 	console()<<squirtle->identifier+" "<<squirtle->x<<" "<<squirtle->y<<endl;
 }
