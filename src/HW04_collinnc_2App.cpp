@@ -1,6 +1,9 @@
+#pragma once
 #include "cinder/app/AppBasic.h"
 #include "cinder/gl/gl.h"
+#include "cinder/gl/Texture.h"
 #include "CollinncStarbucks.h"
+#include "Resources.h"
 #include <iostream>
 #include <fstream>
 
@@ -17,25 +20,56 @@ class HW04_collinnc_2App : public AppBasic {
 	void update();
 	void draw();
 
+	Surface* mySurface_;
+	void colorSurface(uint8_t* pixels, CollinncStarbucks* map);
 	// Constructs the inital array of all the data after reading it in
 	Entry* makeArray();
 	int num_items;
+	Entry* entries;
+
+	static const int kAppWidth=600;
+	static const int kAppHeight=600;
+	static const int kTextureSize=1024;
+	
 };
 
 void HW04_collinnc_2App::setup()
 {
+	
+	
+	mySurface_ = new Surface(kTextureSize,kTextureSize,false);
+	//uint8_t* dataArray = (*mySurface_).getData();
 	num_items=0;
 	
 	ifstream in("Starbucks_2006.csv");
 	
-	Entry* entries = makeArray();
+	entries = makeArray();
 	CollinncStarbucks* test = new CollinncStarbucks;
 	test->num_items = num_items;
 	test->build(entries, num_items);
 
+	//colorSurface(dataArray, test);
 	//Use the following line to manipulate the getNearest parameters
-	Entry* squirtle = test->getNearest(.05,.05);
-	console()<<squirtle->identifier+" "<<squirtle->x<<" "<<squirtle->y<<endl;
+	//Entry* squirtle = test->getNearest(0,0);
+	//console()<<squirtle->identifier+" "<<squirtle->x<<" "<<squirtle->y<<endl;
+}
+
+void  HW04_collinnc_2App::colorSurface(uint8_t* pixels, CollinncStarbucks* map){
+	//int offset = 3*(i+j*1024);
+	
+	for(int i = 0; i<kAppWidth;i++){
+		for(int j=0; j<kAppHeight;j++){
+			float transformed_y=(float)((kAppHeight-j)/kAppHeight);
+			float transformed_x=(float)(i/kAppWidth);
+			Item* prox = map->getNearestItem(transformed_x,transformed_y);
+			int offset = 3*(i+j*1024);
+			pixels[offset] = prox->r;
+			pixels[offset+1] = prox->g;
+			pixels[offset+2] = prox->b;
+
+		}
+	}
+
 }
 
 Entry* HW04_collinnc_2App::makeArray(){
@@ -75,12 +109,21 @@ void HW04_collinnc_2App::mouseDown( MouseEvent event )
 
 void HW04_collinnc_2App::update()
 {
+	uint8_t* dataArray = (*mySurface_).getData();
+	//colorSurface(dataArray, test);
+	//Entry* entries = makeArray();
+	CollinncStarbucks* cat = new CollinncStarbucks;
+	cat->num_items = num_items;
+	cat->build(entries, num_items);
+
+	colorSurface(dataArray, cat);
+
 }
 
 void HW04_collinnc_2App::draw()
 {
 	// clear out the window with black
-	gl::clear( Color( 0, 0, 0 ) ); 
+	gl::draw( *mySurface_ ); 
 }
 
 CINDER_APP_BASIC( HW04_collinnc_2App, RendererGl )
