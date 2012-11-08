@@ -30,6 +30,9 @@ class HW04_collinnc_2App : public AppBasic {
 	static const int kAppWidth=600;
 	static const int kAppHeight=600;
 	static const int kTextureSize=1024;
+
+	uint8_t* dataArray;
+	CollinncStarbucks* test;
 	
 };
 
@@ -41,10 +44,12 @@ void HW04_collinnc_2App::setup()
 	//uint8_t* dataArray = (*mySurface_).getData();
 	num_items=0;
 	
+	dataArray = (*mySurface_).getData();
+
 	ifstream in("Starbucks_2006.csv");
 	
 	entries = makeArray();
-	CollinncStarbucks* test = new CollinncStarbucks;
+	test = new CollinncStarbucks;
 	test->num_items = num_items;
 	test->build(entries, num_items);
 
@@ -105,18 +110,23 @@ Entry* HW04_collinnc_2App::makeArray(){
 
 void HW04_collinnc_2App::mouseDown( MouseEvent event )
 {
+	console() << "clicked!" <<endl;
+	float click_x = event.getX();
+	float click_y = event.getY();
+	Entry* place = test->getNearest(click_x,click_y);
+	console()<<place->identifier+" "<<place->x<<" "<<place->y<<endl;
 }
 
 void HW04_collinnc_2App::update()
 {
-	uint8_t* dataArray = (*mySurface_).getData();
+	//uint8_t* dataArray = (*mySurface_).getData();
 	//colorSurface(dataArray, test);
 	//Entry* entries = makeArray();
-	CollinncStarbucks* cat = new CollinncStarbucks;
+	/*CollinncStarbucks* cat = new CollinncStarbucks;
 	cat->num_items = num_items;
 	cat->build(entries, num_items);
 
-	colorSurface(dataArray, cat);
+	colorSurface(dataArray, cat);*/
 
 }
 
