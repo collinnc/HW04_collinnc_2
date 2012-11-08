@@ -14,7 +14,7 @@ class Item{
 public:
 	Entry* data;
 	//Color rand_color;
-	//Item* left;
-	//Item* right;
+	Item* left;
+	Item* right;
 	int r,g,b;
 };

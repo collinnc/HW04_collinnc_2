@@ -55,8 +55,8 @@ void HW04_collinnc_2App::setup()
 
 	//colorSurface(dataArray, test);
 	//Use the following line to manipulate the getNearest parameters
-	//Entry* squirtle = test->getNearest(0,0);
-	//console()<<squirtle->identifier+" "<<squirtle->x<<" "<<squirtle->y<<endl;
+	/*Entry* squirtle = test->getNearest(.7,.6);
+	console()<<squirtle->identifier+" "<<squirtle->x<<" "<<squirtle->y<<endl;*/
 }
 
 void  HW04_collinnc_2App::colorSurface(uint8_t* pixels, CollinncStarbucks* map){
@@ -111,8 +111,8 @@ Entry* HW04_collinnc_2App::makeArray(){
 void HW04_collinnc_2App::mouseDown( MouseEvent event )
 {
 	console() << "clicked!" <<endl;
-	float click_x = event.getX();
-	float click_y = event.getY();
+	float click_x = (float)event.getX()/kAppWidth;
+	float click_y = 1-((float)event.getY()/kAppHeight);
 	Entry* place = test->getNearest(click_x,click_y);
 	console()<<place->identifier+" "<<place->x<<" "<<place->y<<endl;
 }
