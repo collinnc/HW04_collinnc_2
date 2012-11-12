@@ -42,6 +42,7 @@ class HW04_collinnc_2App : public AppBasic {
 	void mouseDown( MouseEvent event );	
 	void update();
 	void draw();
+	void prepareSettings(Settings* settings);
 
 	static const int kAppWidth=700;
 	static const int kAppHeight=700;
@@ -76,6 +77,12 @@ class HW04_collinnc_2App : public AppBasic {
 	
 };
 
+void HW04_collinnc_2App::prepareSettings(Settings* settings){
+	(*settings).setWindowSize(kAppWidth, kAppHeight);
+	(*settings).setResizable(false);
+
+}
+
 void HW04_collinnc_2App::setup()
 {
 	mySurface_ = new Surface(kTextureSize,kTextureSize,false);
@@ -94,12 +101,12 @@ void HW04_collinnc_2App::setup()
 	test = new CollinncStarbucks;
 	test->num_items = num_items;
 	test->build(entries, num_items);
-	showPoints(dataArray, test->items);
+	//showPoints(dataArray, test->items);
 	//colorSurface(dataArray, test);
 	
 	// Comment in the following lines for goals EFG
-	//getCensus();
-	//colorDensity(data2, census);
+	getCensus();
+	colorDensity(data2, census);
 }
 
 void  HW04_collinnc_2App::colorSurface(uint8_t* pixels, CollinncStarbucks* map){	
@@ -198,8 +205,8 @@ void HW04_collinnc_2App::getCensus(){
 		cen1.get();
 		cen1 >> lat;
 
-		tmp->x = (lon+125.0)/62.0;
-		tmp->y = (lat-24.0)/25.0;
+		tmp->x = lon;
+		tmp->y = lat;
 
 		census->push_back(*tmp);
 	}
@@ -220,7 +227,7 @@ void colorDensity(uint8_t* pixels, vector<census_point>* census){
 	for(int i = 0; i < (int)census->size(); i++){
 		if(census->at(i).popChange<0){
 			green = 0;
-			if(census->at(i).popChange>3000)
+			if(census->at(i).popChange<-3000)
 				red = 255;
 			else 
 				red = (int)(255*((double)census->at(i).popChange/3000.0));
@@ -284,8 +291,8 @@ void HW04_collinnc_2App::draw()
 {
 	// clear out the window with black
 	gl::clear();
-	//gl::draw( *deltaDensity);
-	gl::draw( *mySurface_ ); 
+	gl::draw( *deltaDensity);
+	//gl::draw( *mySurface_ ); 
 	
 }
 
