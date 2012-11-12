@@ -21,17 +21,7 @@ public:
 	// to a single point (x,y). Looks through each element to compare.
 	virtual Entry* getNearest(double x, double y);
 
-	// A helper method for the build method for creating the KdTree.
-	// Never fully implemented due to the switch
-	//Item* buildKdTree(Entry* c, Item* root , bool xLevel);
-
 	Item* getNearestItem(double x, double y);
-	//Entry* slowGetNearest(double x, double y, Item* r);
-	
-	//Item* reorder(Item* arr, int arr_len, bool onLeft);
-
-	// A pointer to the root of the tree.
-	//KdTree* tree;
 	
 	//Number of items in the given array
 	int num_items;

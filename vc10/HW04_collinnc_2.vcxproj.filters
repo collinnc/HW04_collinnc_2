@@ -29,9 +29,6 @@
     <ClInclude Include="..\include\Starbucks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\KdTree.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\CollinncStarbucks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
