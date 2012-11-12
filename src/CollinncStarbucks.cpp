@@ -38,23 +38,69 @@ void CollinncStarbucks::build(Entry* c, int n){
 		(items+i)->data->x = (entries+i)->x;
 		(items+i)->data->y = (entries+i)->y;
 		*/
-		(items+i)->r = (int)(rand()*255);
-		(items+i)->g = (int)(rand()*255);
-		(items+i)->b = (int)(rand()*255);
+		(items+i)->r = rand()%256;
+		(items+i)->g = rand()%256;
+		(items+i)->b = rand()%256;
     }
 	
+
+
+
+
 	tree = new KdTree;
 	Item* panda = new Item;
 	
 	panda->data=(entries+(n/2));
 	tree->root=panda;
 	
+	/*Item* left = reorder(panda,n,true);
+	Item* right = reorder(panda, n, false);*/
 
-	for(int i=0; i<n;i++){
 
-	panda = buildKdTree((entries+i), tree->root, true);
+	panda = buildKdTree(entries, tree->root, true);
 	tree->root=panda;
+}
+
+// Completely inspired by @Sonodabe
+Item* CollinncStarbucks::reorder(Item* arr, int arr_len, bool onLeft){
+
+	Item* mid = (arr + arr_len/2);
+	float compare = mid->data->x;
+	int bottom_count = 0;
+	int top_count=0;
+	int iter_bottom =0;
+	int iter_top =0;
+	
+	for(int i = 0; i<arr_len ; i++){
+		if( (arr + i)->data->x < compare)
+			bottom_count++;
+		else
+			top_count++;
 	}
+
+	Item* bottom = new Item[bottom_count];
+	Item* top = new Item[top_count];
+	//Item* noob = new Item[arr_len];
+
+	if(onLeft){
+		for( int j = 0; j<arr_len; j++){
+			if((arr+j)->data-> x < compare){
+				bottom[iter_bottom]=*(arr+j);
+				iter_bottom++;
+			}
+		}
+		return bottom;
+	}else{
+		for( int k=0;k<arr_len; k++){
+			if((arr+k)->data-> x > compare){
+				top[iter_top]=*(arr+k);
+				iter_top++;
+			}
+		}
+		return top;
+	}
+
+
 }
 
 Item* CollinncStarbucks::buildKdTree(Entry* c, Item* root, bool xLevel){
@@ -69,11 +115,11 @@ Item* CollinncStarbucks::buildKdTree(Entry* c, Item* root, bool xLevel){
 	*/
 	
 	
-	/*r->left=NULL;
-	r->right=NULL;*/
+	r->left=NULL;
+	r->right=NULL;
 	//Item* r = NULL;
-	//if(c==NULL||r->data==NULL) return NULL;
-	//
+	if(c==NULL||r->data==NULL) return NULL;
+
 	//if(xLevel){
 	//	if(c->x < r->data->x)
 	//		//return buildKdTree(c, r->left, !xLevel);
@@ -102,11 +148,11 @@ Entry* CollinncStarbucks::getNearest(double x, double y){
 
 	
 	//Item* r = tree->root;
-	return tree->root->data;
+	//return tree->root->data;
 		//slowGetNearest(x,y,r);
 		
 	
-	/*double smallestDistSoFar=sqrt((((((items)->data->x)-x)*(((items)->data->x)-x))+((((items)->data->y)-y)*(((items)->data->y)-y))));
+	double smallestDistSoFar=sqrt((((((items)->data->x)-x)*(((items)->data->x)-x))+((((items)->data->y)-y)*(((items)->data->y)-y))));
 	int shortestIndex =0;
 	for(int i=1; i<this->num_items;  i++){
 		double dist = sqrt((((((items+i)->data->x)-x)*(((items+i)->data->x)-x))+((((items+i)->data->y)-y)*(((items+i)->data->y)-y))));
@@ -115,23 +161,15 @@ Entry* CollinncStarbucks::getNearest(double x, double y){
 			shortestIndex = i;
 		}
 
-	}*/
+	}
 
-	//return (items+shortestIndex)->data;
+	return (items+shortestIndex)->data;
 	//return NULL;
 	
 }
 
 Item* CollinncStarbucks::getNearestItem(double x, double y){
-	//Entry* c = new Entry;
-	//c = this->entries;
-
-	
-	//Item* r = tree->root;
-	//return tree->root->data;
-		//slowGetNearest(x,y,r);
 		
-	
 	double smallestDistSoFar=sqrt((((((items)->data->x)-x)*(((items)->data->x)-x))+((((items)->data->y)-y)*(((items)->data->y)-y))));
 	int shortestIndex =0;
 	for(int i=1; i<this->num_items;  i++){

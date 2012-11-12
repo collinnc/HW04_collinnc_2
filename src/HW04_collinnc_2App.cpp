@@ -24,6 +24,7 @@ class HW04_collinnc_2App : public AppBasic {
 	void colorSurface(uint8_t* pixels, CollinncStarbucks* map);
 	// Constructs the inital array of all the data after reading it in
 	Entry* makeArray();
+	void showPoints(uint8_t* pixels, Item* locs);
 	int num_items;
 	Entry* entries;
 
@@ -38,7 +39,7 @@ class HW04_collinnc_2App : public AppBasic {
 
 void HW04_collinnc_2App::setup()
 {
-	
+	//gl::color(Color8u(0,0,0));
 	
 	mySurface_ = new Surface(kTextureSize,kTextureSize,false);
 	//uint8_t* dataArray = (*mySurface_).getData();
@@ -52,11 +53,11 @@ void HW04_collinnc_2App::setup()
 	test = new CollinncStarbucks;
 	test->num_items = num_items;
 	test->build(entries, num_items);
-
+	showPoints(dataArray, test->items);
 	//colorSurface(dataArray, test);
 	//Use the following line to manipulate the getNearest parameters
-	/*Entry* squirtle = test->getNearest(.7,.6);
-	console()<<squirtle->identifier+" "<<squirtle->x<<" "<<squirtle->y<<endl;*/
+	Entry* squirtle = test->getNearest(.7,.6);
+	console()<<squirtle->identifier+" "<<squirtle->x<<" "<<squirtle->y<<endl;
 }
 
 void  HW04_collinnc_2App::colorSurface(uint8_t* pixels, CollinncStarbucks* map){
@@ -75,6 +76,18 @@ void  HW04_collinnc_2App::colorSurface(uint8_t* pixels, CollinncStarbucks* map){
 		}
 	}
 
+}
+
+void HW04_collinnc_2App::showPoints(uint8_t* pixels, Item* locs){
+	
+	for(int i=0; i< num_items; i++){
+		int x1 = (int)(((locs +i)->data->x)*600);
+		int y1 = (int)((1-((locs +i)->data->y))*600);
+		int offset = 3*(x1+y1*1024);
+		pixels[offset] = (locs+i)->r;
+		pixels[offset+1] = (locs+i)->g;
+		pixels[offset+2] = (locs+i)->b;
+	}
 }
 
 Entry* HW04_collinnc_2App::makeArray(){
@@ -104,6 +117,8 @@ Entry* HW04_collinnc_2App::makeArray(){
 		(arr+i)->y = yPos;
 		i++;
 	}
+	in.clear();
+	in.seekg(0);
 	in.close();
 	return arr;
 }

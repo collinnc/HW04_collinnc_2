@@ -28,6 +28,8 @@ public:
 	Item* getNearestItem(double x, double y);
 	//Entry* slowGetNearest(double x, double y, Item* r);
 	
+	Item* reorder(Item* arr, int arr_len, bool onLeft);
+
 	// A pointer to the root of the tree.
 	KdTree* tree;
 	
