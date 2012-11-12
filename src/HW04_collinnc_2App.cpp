@@ -3,6 +3,7 @@
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Texture.h"
 #include "CollinncStarbucks.h"
+#include "cinder/ImageIo.h"
 #include "Resources.h"
 #include <iostream>
 #include <fstream>
@@ -40,6 +41,7 @@ class HW04_collinnc_2App : public AppBasic {
 	  // initializes the collinncStarbucks object and uses the build and getNearest methods.
 	void setup();
 	void mouseDown( MouseEvent event );	
+	void keyDown(KeyEvent event);
 	void update();
 	void draw();
 	void prepareSettings(Settings* settings);
@@ -58,6 +60,9 @@ class HW04_collinnc_2App : public AppBasic {
 	
 	// Used to visualize goal A
 	void showPoints(uint8_t* pixels, Item* locs);
+	
+	//Press any key to show the map Satisfies goal A
+	bool showMap;
 
 	// Used for goals EFG
 	void getCensus();
@@ -68,8 +73,10 @@ class HW04_collinnc_2App : public AppBasic {
 	uint8_t* dataArray;
 	uint8_t* data2;
 	CollinncStarbucks* test;
+	double proxX, proxY;
 
 	bool clicked;
+	gl::Texture map;
 
 	Surface* deltaDensity;
 
@@ -85,6 +92,7 @@ void HW04_collinnc_2App::prepareSettings(Settings* settings){
 
 void HW04_collinnc_2App::setup()
 {
+	map = gl::Texture(loadImage("usa3.png"));
 	mySurface_ = new Surface(kTextureSize,kTextureSize,false);
 	deltaDensity = new Surface(kTextureSize, kTextureSize, false);
 
@@ -101,12 +109,12 @@ void HW04_collinnc_2App::setup()
 	test = new CollinncStarbucks;
 	test->num_items = num_items;
 	test->build(entries, num_items);
-	//showPoints(dataArray, test->items);
+	showPoints(dataArray, test->items);
 	//colorSurface(dataArray, test);
 	
 	// Comment in the following lines for goals EFG
-	getCensus();
-	colorDensity(data2, census);
+	//getCensus();
+	//colorDensity(data2, census);
 }
 
 void  HW04_collinnc_2App::colorSurface(uint8_t* pixels, CollinncStarbucks* map){	
@@ -264,8 +272,9 @@ void HW04_collinnc_2App::mouseDown( MouseEvent event )
 		double click_y = 1-((double)event.getY()/kAppHeight);
 		Entry* place = test->getNearest(click_x,click_y);
 		console()<<place->identifier+" "<<place->x<<" "<<place->y<<endl;
-		//gl::color(Color8u(255,255,0));
-		gl::drawSolidCircle(Vec2f((place->x)*kAppWidth,(1-(place->y))*kAppHeight), 25,0);
+		proxX = (place->x)*kAppWidth;
+		proxY = (1-place->y)*kAppHeight;
+		//gl::drawSolidCircle(Vec2f((place->x)*kAppWidth,(1-(place->y))*kAppHeight), 25,0);
 	}
 
 
@@ -282,6 +291,11 @@ void HW04_collinnc_2App::mouseDown( MouseEvent event )
 	}
 }
 
+void HW04_collinnc_2App::keyDown(KeyEvent event){
+	showMap=!showMap;
+
+}
+
 void HW04_collinnc_2App::update()
 {
 
@@ -291,8 +305,11 @@ void HW04_collinnc_2App::draw()
 {
 	// clear out the window with black
 	gl::clear();
-	gl::draw( *deltaDensity);
-	//gl::draw( *mySurface_ ); 
+	//gl::draw( *deltaDensity);
+	gl::draw( *mySurface_ ); 
+	if(!showMap)	
+		gl::draw(map, getWindowBounds());
+	gl::drawSolidCircle(Vec2f(proxX, proxY), 5.0f,0);
 	
 }
 
