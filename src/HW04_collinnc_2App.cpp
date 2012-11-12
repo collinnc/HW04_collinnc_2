@@ -28,8 +28,8 @@ class HW04_collinnc_2App : public AppBasic {
 	int num_items;
 	Entry* entries;
 
-	static const int kAppWidth=600;
-	static const int kAppHeight=600;
+	static const int kAppWidth=700;
+	static const int kAppHeight=700;
 	static const int kTextureSize=1024;
 
 	uint8_t* dataArray;
@@ -42,7 +42,7 @@ void HW04_collinnc_2App::setup()
 	//gl::color(Color8u(0,0,0));
 	
 	mySurface_ = new Surface(kTextureSize,kTextureSize,false);
-	//uint8_t* dataArray = (*mySurface_).getData();
+	
 	num_items=0;
 	
 	dataArray = (*mySurface_).getData();
@@ -65,8 +65,8 @@ void  HW04_collinnc_2App::colorSurface(uint8_t* pixels, CollinncStarbucks* map){
 	
 	for(int i = 0; i<kAppWidth;i++){
 		for(int j=0; j<kAppHeight;j++){
-			float transformed_y=(float)((kAppHeight-j)/kAppHeight);
-			float transformed_x=(float)(i/kAppWidth);
+			double transformed_y=1-(double)j/kAppHeight;
+			double transformed_x=(double)i/kAppWidth;
 			Item* prox = map->getNearestItem(transformed_x,transformed_y);
 			int offset = 3*(i+j*1024);
 			pixels[offset] = prox->r;
@@ -126,8 +126,8 @@ Entry* HW04_collinnc_2App::makeArray(){
 void HW04_collinnc_2App::mouseDown( MouseEvent event )
 {
 	console() << "clicked!" <<endl;
-	float click_x = (float)event.getX()/kAppWidth;
-	float click_y = 1-((float)event.getY()/kAppHeight);
+	double click_x = (double)event.getX()/kAppWidth;
+	double click_y = 1-((double)event.getY()/kAppHeight);
 	Entry* place = test->getNearest(click_x,click_y);
 	console()<<place->identifier+" "<<place->x<<" "<<place->y<<endl;
 }
@@ -148,7 +148,9 @@ void HW04_collinnc_2App::update()
 void HW04_collinnc_2App::draw()
 {
 	// clear out the window with black
+	gl::clear();
 	gl::draw( *mySurface_ ); 
+	
 }
 
 CINDER_APP_BASIC( HW04_collinnc_2App, RendererGl )
