@@ -5,15 +5,11 @@
 #include "cinder/gl/Texture.h"
 
 /*
-The Items are what make up the KdTree
-Each one has a right and left pointer to point to the 
-right and left subtrees.
-Not implemented fully becuase of the switch to unsorted arrays.
+Items hold an entry, a color, and a population for each starbucks
 */
 class Item{
 public:
 	Entry* data;
-	//Item* left;
-	//Item* right;
 	int r,g,b;
+	int population;
 };

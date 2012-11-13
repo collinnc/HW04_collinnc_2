@@ -19,21 +19,17 @@
 *@date 2012-11-12
 *
 *@note This project attempts goals:
-*	(B) upon left clicking
-*   (C) upon right-clicking (after some substantial delay)
-*   (EFG) by changing in code comments
+*	(A) upon pressing an unassigned key
+*   (B) upon left clicking
+*   (C) upon pressing 'c' (after some substantial delay)
+*   (D) upon right clicking
+*   (F) upon pressing 'p' (after some delay)
 */
 
 using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-// Creates a structure of census points
-struct census_point{
-	int popChange;
-	double x;
-	double y;
-};
 
 class HW04_collinnc_2App : public AppBasic {
   public:
@@ -50,14 +46,14 @@ class HW04_collinnc_2App : public AppBasic {
 	static const int kAppHeight=700;
 	static const int kTextureSize=1024;
 	
-	//Used for showPoint and 
+	//Used for showPoint and colorSurface
 	Surface* mySurface_;
 	
 	// Used when zooming
 	Surface* zoomer;
-
-	//Used
-	Surface* regional;
+	
+	// Used for goal F
+	Surface* deltaDensity;
 	
 	// Used to satisfy goal C
 	void colorSurface(uint8_t* pixels, CollinncStarbucks* map);
@@ -71,10 +67,14 @@ class HW04_collinnc_2App : public AppBasic {
 	//Press any key to show the map Satisfies goal A
 	bool showMap;
 
-	// Used for goals EFG
+	// Used for goal F
 	void getCensus();
-	void colorDensity(uint8_t* pixels, vector<census_point>* census);
+	void colorDensity(uint8_t* pixels, CollinncStarbucks* map);
+
+	// Used for goal D. Zooms in at the location of the mouse
 	void zoomIn(uint8_t* pixels, Item* locs, int cx, int cy);
+	
+	int getMaxPop(Item* locs);
 
 	int num_items;
 	Entry* entries;
@@ -88,11 +88,8 @@ class HW04_collinnc_2App : public AppBasic {
 
 	bool clicked;
 	bool zoomed;
+	bool showDensity;
 	gl::Texture map;
-
-	Surface* deltaDensity;
-
-	vector<census_point>* census;
 	
 };
 
@@ -108,19 +105,18 @@ void HW04_collinnc_2App::setup()
 	mySurface_ = new Surface(kTextureSize,kTextureSize,false);
 	deltaDensity = new Surface(kTextureSize, kTextureSize, false);
 	zoomer = new Surface(kTextureSize, kTextureSize, false);
-	regional = new Surface(kTextureSize, kTextureSize, false);
 
-	census = new vector<census_point>();
+	//census = new vector<census_point>();
 	zoomed=false;
 	showMap=false;
 	clicked=false;
+	showDensity = false;
 	num_items=0;
 	
 	dataArray = (*mySurface_).getData();
 	data2= (*deltaDensity).getData();
 	zoom = (*zoomer).getData();
-	regionalData = (*regional).getData();
-
+	
 	ifstream in("Starbucks_2006.csv");
 	
 	entries = makeArray();
@@ -128,11 +124,10 @@ void HW04_collinnc_2App::setup()
 	test->num_items = num_items;
 	test->build(entries, num_items);
 	showPoints(dataArray, test->items);
-	//colorSurface(dataArray, test);
 	
-	// Comment in the following lines for goals EFG
-	//getCensus();
-	//colorDensity(data2, census);
+	// The following method is what causes the lag in run-time
+	getCensus();
+		
 }
 
 void  HW04_collinnc_2App::colorSurface(uint8_t* pixels, CollinncStarbucks* map){	
@@ -196,8 +191,7 @@ void HW04_collinnc_2App::zoomIn(uint8_t* pixels, Item* locs, int cx, int cy){
 	for(int j=0; j<num_items; j++){
 		if(((locs+j)->data->x)*kAppWidth >= cx-50 && ((locs+j)->data->x)*kAppWidth <= cx+50 
 			&& (1-((locs+j)->data->y))*kAppHeight >= cy-50 && (1-((locs+j)->data->y))*kAppHeight <= cy+50){
-				//console()<<(locs+j)->data->identifier<<std::endl;
-				//(valid_points+valid_index) = locs+j;
+		
 				(valid_points+valid_index)->data = (locs+j)->data;
 				(valid_points+valid_index)->r = (locs+j)->r;
 				(valid_points+valid_index)->g = (locs+j)->g;
@@ -257,11 +251,11 @@ void HW04_collinnc_2App::getCensus(){
 
 	int buffer;
 	ifstream cen1("Census_2000.csv");
-	ifstream cen2("Census_2010.csv");
-	census_point* tmp = new census_point;
-	int pop1, pop2;
+
+	int pop;
 	double lon, lat;
-	while(cen1.good() && cen2.good()){
+	Item* close;
+	while(cen1.good()){
 		cen1 >> buffer;
         cen1.get();
         cen1 >> buffer;
@@ -270,77 +264,56 @@ void HW04_collinnc_2App::getCensus(){
         cen1.get();
         cen1 >> buffer;
         cen1.get();
-		cen1 >> pop1;
+		cen1 >> pop;
 		cen1.get();
-		cen2 >> buffer;
-        cen2.get();
-        cen2 >> buffer;
-        cen2.get();
-        cen2 >> buffer;
-        cen2.get();
-        cen2 >> buffer;
-        cen2.get();
-		cen2 >> pop2;
-		cen2.get();
-
-		tmp->popChange = pop2-pop1;
 		cen1 >> lon;
 		cen1.get();
 		cen1 >> lat;
 
-		tmp->x = lon;
-		tmp->y = lat;
-
-		census->push_back(*tmp);
+		close = test->getNearestItem(lon, lat);
+		close->population = pop;
 	}
 
 	cen1.close();
-	cen2.close();
-
 
 }
 
-void colorDensity(uint8_t* pixels, vector<census_point>* census){
-
-	int red, green;
-	int xPos, yPos;
-	int offset;
-	int tx, ty;
-
-	for(int i = 0; i < (int)census->size(); i++){
-		if(census->at(i).popChange<0){
-			green = 0;
-			if(census->at(i).popChange<-3000)
-				red = 255;
-			else 
-				red = (int)(255*((double)census->at(i).popChange/3000.0));
-		}
-		else{
-			red =0;
-			if(census->at(i).popChange>3000)
-				green = 255;
-			else
-				green = (int)(255*((double)census->at(i).popChange/3000.0));
-		}
-		
-		int tx = (int)((census->at(i).x)*700);
-		int ty = (int)((census->at(i).y)*700);
-		offset = 3*(tx+ty*1024);
-		pixels[offset] = red;
-		pixels[offset+1] = green;
-		pixels[offset+2] = 0;
-
-
+int HW04_collinnc_2App::getMaxPop(Item* locs){
+	int maxPop = 0;
+	for(int i =0; i<num_items; i++){
+		if(locs->population >maxPop)
+			maxPop = locs->population;
 	}
 
+	return maxPop;
 
+}
 
+void HW04_collinnc_2App::colorDensity(uint8_t* pixels, CollinncStarbucks* map){
 
+	int offset;
 
+	int maxPop = getMaxPop(test->items);
+
+	double transformed_y,transformed_x;
+	Item* prox;
+		
+	for(int i = 0; i<kAppWidth;i++){
+		for(int j=0; j<kAppHeight;j++){
+			transformed_y=1-(double)j/kAppHeight;
+			transformed_x=(double)i/kAppWidth;
+			prox = map->getNearestItem(transformed_x,transformed_y);
+			offset = 3*(i+j*1024);
+			pixels[offset] = ((double)prox->population/(double)maxPop)*255;
+			pixels[offset+1] = 255-((double)prox->population/(double)maxPop)*255;
+			pixels[offset+2] = 150;
+		}
+	}
 }
 
 void HW04_collinnc_2App::mouseDown( MouseEvent event )
 {
+	// Left click to highlight nearest starbucks
 	if(event.isLeft()){
 		double click_x, click_y;
 
@@ -400,6 +373,13 @@ void HW04_collinnc_2App::keyDown(KeyEvent event){
 			showPoints(dataArray, test->items);
 	}
 
+	// Press 'p' to show the density of each starbucks,
+	// Satisfies goal F
+	if(event.getChar()=='p'){
+		showDensity = !showDensity;
+		colorDensity(data2, test);
+	}
+
 	// Show the map by pressing any other key
 	else{
 		if(!zoomed)
@@ -417,12 +397,13 @@ void HW04_collinnc_2App::draw()
 {
 	// clear out the window with black
 	gl::clear();
-	//gl::draw( *deltaDensity);
 	if(zoomed)
 		gl::draw(*zoomer);
 	else{
 		gl::draw(*mySurface_);
 	}
+	if(showDensity)
+		gl::draw(*deltaDensity);
 
 	if(showMap)	
 		gl::draw(map, getWindowBounds());
