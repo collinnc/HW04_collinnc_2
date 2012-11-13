@@ -50,7 +50,14 @@ class HW04_collinnc_2App : public AppBasic {
 	static const int kAppHeight=700;
 	static const int kTextureSize=1024;
 	
+	//Used for showPoint and 
 	Surface* mySurface_;
+	
+	// Used when zooming
+	Surface* zoomer;
+
+	//Used
+	Surface* regional;
 	
 	// Used to satisfy goal C
 	void colorSurface(uint8_t* pixels, CollinncStarbucks* map);
@@ -67,15 +74,20 @@ class HW04_collinnc_2App : public AppBasic {
 	// Used for goals EFG
 	void getCensus();
 	void colorDensity(uint8_t* pixels, vector<census_point>* census);
-	
+	void zoomIn(uint8_t* pixels, Item* locs, int cx, int cy);
+
 	int num_items;
 	Entry* entries;
 	uint8_t* dataArray;
 	uint8_t* data2;
+	uint8_t* regionalData;
+	uint8_t* zoom;
 	CollinncStarbucks* test;
 	double proxX, proxY;
+	int zoomX, zoomY;
 
 	bool clicked;
+	bool zoomed;
 	gl::Texture map;
 
 	Surface* deltaDensity;
@@ -95,13 +107,19 @@ void HW04_collinnc_2App::setup()
 	map = gl::Texture(loadImage("usa3.png"));
 	mySurface_ = new Surface(kTextureSize,kTextureSize,false);
 	deltaDensity = new Surface(kTextureSize, kTextureSize, false);
+	zoomer = new Surface(kTextureSize, kTextureSize, false);
+	regional = new Surface(kTextureSize, kTextureSize, false);
 
 	census = new vector<census_point>();
-
+	zoomed=false;
+	showMap=false;
+	clicked=false;
 	num_items=0;
 	
 	dataArray = (*mySurface_).getData();
 	data2= (*deltaDensity).getData();
+	zoom = (*zoomer).getData();
+	regionalData = (*regional).getData();
 
 	ifstream in("Starbucks_2006.csv");
 	
@@ -118,23 +136,29 @@ void HW04_collinnc_2App::setup()
 }
 
 void  HW04_collinnc_2App::colorSurface(uint8_t* pixels, CollinncStarbucks* map){	
+	double transformed_y, transformed_x;
+	Item* prox;
+	int offset;
+	
 	for(int i = 0; i<kAppWidth;i++){
 		for(int j=0; j<kAppHeight;j++){
-			double transformed_y=1-(double)j/kAppHeight;
-			double transformed_x=(double)i/kAppWidth;
-			Item* prox = map->getNearestItem(transformed_x,transformed_y);
-			int offset = 3*(i+j*1024);
+			transformed_y=1-(double)j/kAppHeight;
+			transformed_x=(double)i/kAppWidth;
+			prox = map->getNearestItem(transformed_x,transformed_y);
+			offset = 3*(i+j*1024);
 			pixels[offset] = prox->r;
 			pixels[offset+1] = prox->g;
 			pixels[offset+2] = prox->b;
 
 		}
 	}
-
 }
 
 void HW04_collinnc_2App::showPoints(uint8_t* pixels, Item* locs){
-	
+	//Clear out the screen with black
+	for(int h=0;h<3*kTextureSize*kTextureSize;h++)
+		pixels[h]=0;
+
 	for(int i=0; i< num_items; i++){
 		int x1 = (int)(((locs+i)->data->x)*kAppWidth);
 		int y1 = (int)((1-((locs+i)->data->y))*kAppHeight);
@@ -144,6 +168,57 @@ void HW04_collinnc_2App::showPoints(uint8_t* pixels, Item* locs){
 		pixels[offset+2] = (locs+i)->b;
 	}
 }
+
+void HW04_collinnc_2App::zoomIn(uint8_t* pixels, Item* locs, int cx, int cy){
+
+	// Bounds checking
+	if(cx < 50) cx= 50;
+	if(cx > kAppWidth-50) cx = kAppWidth-50;
+	if(cy < 50) cy=50;
+	if(cy > kAppHeight - 50) cy = kAppHeight-50;
+
+	// Clear out the screen
+	for(int h=0;h<3*kTextureSize*kTextureSize;h++)
+		pixels[h] =0;
+
+	int num_valid =0;
+	// Find the size of the array
+	for(int i=0;i<num_items; i++){
+		if(((locs+i)->data->x)*kAppWidth >= cx-50 && ((locs+i)->data->x)*kAppWidth <= cx+50 
+			&& (1-(locs+i)->data->y)*kAppHeight >= cy-50 && (1-(locs+i)->data->y)*kAppHeight <= cy+50)
+			num_valid++;
+	}
+
+	Item* valid_points = new Item[num_valid];
+	int valid_index =0;
+
+	//Populate the array
+	for(int j=0; j<num_items; j++){
+		if(((locs+j)->data->x)*kAppWidth >= cx-50 && ((locs+j)->data->x)*kAppWidth <= cx+50 
+			&& (1-((locs+j)->data->y))*kAppHeight >= cy-50 && (1-((locs+j)->data->y))*kAppHeight <= cy+50){
+				//console()<<(locs+j)->data->identifier<<std::endl;
+				//(valid_points+valid_index) = locs+j;
+				(valid_points+valid_index)->data = (locs+j)->data;
+				(valid_points+valid_index)->r = (locs+j)->r;
+				(valid_points+valid_index)->g = (locs+j)->g;
+				(valid_points+valid_index)->b = (locs+j)->b;
+				valid_index++;
+		}
+	}
+
+	// Write to the Surface
+	int new_x, new_y, offset;
+	for(int k=0; k<num_valid;k++){
+		new_x = ((int)(((valid_points+k)->data->x)*kAppWidth)-(cx-50))*7;
+		new_y = ((int)((1-((valid_points+k)->data->y))*kAppHeight)-(cy-50))*7;
+		offset = 3*(new_x+new_y*kTextureSize);
+		pixels[offset] = (valid_points+k)->r;
+		pixels[offset+1] = (valid_points+k)->g;
+		pixels[offset+2] = (valid_points+k)->b;
+
+	}
+}
+
 
 Entry* HW04_collinnc_2App::makeArray(){
 	
@@ -267,32 +342,69 @@ void colorDensity(uint8_t* pixels, vector<census_point>* census){
 void HW04_collinnc_2App::mouseDown( MouseEvent event )
 {
 	if(event.isLeft()){
+		double click_x, click_y;
 
-		double click_x = (double)event.getX()/kAppWidth;
-		double click_y = 1-((double)event.getY()/kAppHeight);
-		Entry* place = test->getNearest(click_x,click_y);
-		console()<<place->identifier+" "<<place->x<<" "<<place->y<<endl;
-		proxX = (place->x)*kAppWidth;
-		proxY = (1-place->y)*kAppHeight;
-		//gl::drawSolidCircle(Vec2f((place->x)*kAppWidth,(1-(place->y))*kAppHeight), 25,0);
-	}
+		if(zoomed){
+			click_x = ((zoomX-50)+(100.0*((double)event.getX()/kAppWidth)))/kAppWidth;
+			click_y = 1-(((zoomY-50)+(100.0*((double)event.getY()/kAppHeight)))/kAppHeight);
 
-
-	if(event.isRight()){
-		if(clicked){
-			colorSurface(dataArray, test);
-			clicked = !clicked;
 		}
 		else{
-			showPoints(dataArray, test->items);
-			clicked = !clicked;
+			click_x = (double)event.getX()/kAppWidth;
+			click_y = 1-((double)event.getY()/kAppHeight);
 		}
+
+
+		Entry* place = test->getNearest(click_x,click_y);
+
+		if(zoomed){
+			proxX = (((place->x)*kAppWidth)-(zoomX-50))*(kAppWidth/100);
+			proxY = (((1-(place->y))*kAppHeight)-(zoomY-50))*(kAppHeight/100);
+
+		}
+		
+		else{
+			proxX = (place->x)*kAppWidth;
+			proxY = (1-place->y)*kAppHeight;
+		}
+		
+	}
+
+	// Right Click to zoom
+	if(event.isRight()){
+		
+		zoomed = true;
+		zoomX = event.getX();
+		zoomY = event.getY();
+		zoomIn(zoom, test->items, zoomX, zoomY);
 
 	}
 }
 
 void HW04_collinnc_2App::keyDown(KeyEvent event){
-	showMap=!showMap;
+	
+	// Press 'u' to zoom out
+	if(event.getChar()=='u'){
+		zoomed=false;
+		for(int i=0;i<3*kTextureSize*kTextureSize; i++)
+			zoom[i]=0;
+	}
+
+	// Press 'c' to switch between coloring the surface with regions
+	// and showing the points
+	if(event.getChar()=='c'){
+		clicked = !clicked;
+		if(clicked)
+			colorSurface(dataArray, test);
+		else
+			showPoints(dataArray, test->items);
+	}
+
+	// Show the map by pressing any other key
+	else{
+		if(!zoomed)
+		showMap=!showMap;
+	}
 
 }
 
@@ -306,8 +418,13 @@ void HW04_collinnc_2App::draw()
 	// clear out the window with black
 	gl::clear();
 	//gl::draw( *deltaDensity);
-	gl::draw( *mySurface_ ); 
-	if(!showMap)	
+	if(zoomed)
+		gl::draw(*zoomer);
+	else{
+		gl::draw(*mySurface_);
+	}
+
+	if(showMap)	
 		gl::draw(map, getWindowBounds());
 	gl::drawSolidCircle(Vec2f(proxX, proxY), 5.0f,0);
 	
