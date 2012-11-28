@@ -24,6 +24,12 @@
 *   (C) upon pressing 'c' (after some substantial delay)
 *   (D) upon right clicking
 *   (F) upon pressing 'p' (after some delay)
+*
+*@citation: Brandon Sonoda helped inspire a few lines here and there, 
+*	notably those is makeArray() and getCensus().
+*	All other code is original or inspired by Bo Brinkman from given files
+*   or class. 
+*   Thanks!
 */
 
 using namespace ci;
@@ -101,6 +107,7 @@ void HW04_collinnc_2App::prepareSettings(Settings* settings){
 
 void HW04_collinnc_2App::setup()
 {
+	// Pic obtained from mapsof.net/map/united-states
 	map = gl::Texture(loadImage("usa3.png"));
 	mySurface_ = new Surface(kTextureSize,kTextureSize,false);
 	deltaDensity = new Surface(kTextureSize, kTextureSize, false);
@@ -213,7 +220,7 @@ void HW04_collinnc_2App::zoomIn(uint8_t* pixels, Item* locs, int cx, int cy){
 	}
 }
 
-
+// Uses a method similar to Brandon Sonoda
 Entry* HW04_collinnc_2App::makeArray(){
 	
 	ifstream in("Starbucks_2006.csv");
